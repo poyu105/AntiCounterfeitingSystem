@@ -1,0 +1,25 @@
+/* 全域字體大小 */
+.fs-7{
+    font-size: 0.75rem;
+}
+/* 全域導覽列 */
+.navbar{
+    /* 確保navbar的z-index會在最頂層 */
+    z-index: 1500; 
+}
+/* 全域Footer */
+#page-footer{
+    background-image: url('/footer.webp');
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center right;
+    opacity: 85%;
+}
+/* 全域文字主題色(健椿綠色) */
+.text-theme{
+    color: #90c331;
+}
+/* 全域hober */
+.hover:hover{
+    opacity: 80%;
+}
