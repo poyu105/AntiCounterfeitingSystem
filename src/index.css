@@ -9,7 +9,7 @@
 }
 /* 全域Footer */
 #page-footer{
-    background-image: url('/footer.webp');
+    background-image: url('https://raw.githubusercontent.com/poyu105/AntiCounterfeitingSystem/refs/heads/gh-pages/footer.webp'); /*使用開發模式請替換為:/footer.webp*/
     background-size: contain;
     background-repeat: no-repeat;
     background-position: center right;
