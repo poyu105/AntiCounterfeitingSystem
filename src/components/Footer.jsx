@@ -6,7 +6,7 @@ export default function Footer(){
             <footer id="page-footer" className="mt-5 py-3 w-100 bg-black">
                 <div className="col-lg-6 col-10 col mx-auto">
                     <div className="d-flex align-items-center justify-content-md-start justify-content-center mb-3">
-                        <img src="/logo-white.webp" alt="logo" className="me-3" />
+                        <img src="https://raw.githubusercontent.com/poyu105/AntiCounterfeitingSystem/refs/heads/gh-pages/logo-white.webp" alt="logo" className="me-3"/> {/*使用開發模式請替換為:/logo-white.webp*/}
                         <div className="d-flex gap-3">
                             <a href="https://www.facebook.com/kenturn1983" className="text-white hover" target="blank" title="FaceBook">
                                 <i className="bi bi-facebook"></i>
