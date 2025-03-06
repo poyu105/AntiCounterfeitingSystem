@@ -4,8 +4,12 @@ export default function Home(){
     const [productCode, setProductCode] = useState(''); //產品編號
     const [productionDate, setProductionDate] = useState(''); //生產年月
     const [randomcode, setRandomCode] = useState(''); //產品隨機碼
+
+    const [isLoading, setIsLoading] = useState(false) //表單送出後載入圖示
     
-    const [showModal, setShowModal] = useState(false) //控制modal顯示狀態
+    const [showConfirmModal, setShowConfirmModal] = useState(false) //控制表單確認modal顯示狀態
+    const [showResponseModal, setShowResponseModal] = useState(false); //控制後端回應modal顯示狀態
+    const [responseData, setShowResponseData] = useState(''); //後端回應資料(用於顯示在modal)
 
     //處理重設按鈕(將所有輸入變數設置為空)
     const handleReset = ()=>{
@@ -30,16 +34,89 @@ export default function Home(){
             e.stopPropagation();
         }else{
             //驗證成功，顯示modal
-            setShowModal(true);
+            setShowConfirmModal(true);
         }
         form.classList.add("was-validated");
     }
 
     //處理表單提交
-    const confirmSubmit = ()=>{
-        setShowModal(false);
-        var form = document.getElementById('v-form');
-        form.submit();
+    const confirmSubmit = async ()=>{
+        setShowConfirmModal(false);
+        setIsLoading(true);
+
+        //準備要提交的資料
+        const productVerificationData = {
+            productCode: productCode,
+            productionDate: productionDate,
+            randomcode: randomcode
+        };
+        
+        //
+        //向後端請求驗證(測試用，正式版api應另存檔案統一管理)
+        //
+        setTimeout(async () => {
+            try {
+                const response = await fetch("https://localhost:7048/api/ProductVerification",{
+                    method: "POST",
+                    headers: {
+                        "Content-Type":"application/json"
+                    },
+                    body: JSON.stringify(productVerificationData)
+                })
+    
+                //檢查回應是否正確
+                if(!response.ok){
+                    alert("請求錯誤!\n請檢查輸入的產品資訊!")
+                    throw new Error("請求錯誤!");
+                }
+    
+                //將回應轉為json
+                const result = await response.json();
+    
+                //判斷回應是否為正品
+                if(result.success){
+                    //驗證成功(正品)
+                    setShowResponseData(
+                        <>
+                            <p className="bg-warning bg-opacity-25 p-1 mb-2 fw-bold">此次查詢已扣除1次查詢機會! 剩餘?次查詢機會</p>
+                            <p className="mb-1">您輸入的產品資訊</p>
+                            <p className="mb-1">產品編碼: {productCode}</p>
+                            <p className="mb-1">生產日期: {productionDate}</p>
+                            <p className="mb-1">產品隨機碼: {randomcode}</p>
+                            <p className="bg-success bg-opacity-10 p-1 mb-1 text-center">經過查驗後為<strong className="fs-4 text-success">正品</strong>，如有需要任何服務，請<a href="https://www.kenturn.com.tw/tw/contact" target="blank">聯絡我們</a>。</p>
+                            <div className="bg-info bg-opacity-25 p-1 mt-1 fs-7">
+                                <p className="m-0 fw-bold">在您查詢前，該產品已被查驗?次</p>
+                                <p className="m-0">上次查驗時間:YYYY/MM/DD HH:MM:SS，地點: OO國家</p>
+                            </div>
+                        </>
+                    )
+                }else{
+                    //驗證失敗(非正品)
+                    setShowResponseData(
+                        <>
+                            <p className="bg-warning bg-opacity-25 p-1 mb-2 fw-bold">此次查詢已扣除1次查詢機會! 剩餘?次查詢機會</p>
+                            <p className="mb-1">您輸入的產品資訊</p>
+                            <p className="mb-1">產品編碼: {productCode}</p>
+                            <p className="mb-1">生產日期: {productionDate}</p>
+                            <p className="mb-1">產品隨機碼: {randomcode}</p>
+                            <p className="bg-danger bg-opacity-10 p-1 m-0 text-center">經過查驗後為<strong className="fs-4 text-danger">非正品</strong>，如有需要任何服務，請<a href="https://www.kenturn.com.tw/tw/contact" target="blank">聯絡我們</a>。</p>
+                            <div className="bg-info bg-opacity-25 p-1 mt-1 fs-7">
+                                <p className="m-0 fw-bold">在您查詢前，該產品已被查驗?次</p>
+                                <p className="m-0">上次查驗時間:YYYY/MM/DD HH:MM:SS，地點: OO國家</p>
+                            </div>
+                        </>
+                    )
+                }
+    
+                //顯示回應modal
+                setShowResponseModal(true);
+            } catch (error) {
+                alert(error);
+                console.error(error);
+            }finally{
+                setIsLoading(false);
+            }
+        }, 2000);
     }
 
     return(
@@ -49,22 +126,22 @@ export default function Home(){
                 <form id="v-form" onSubmit={handleSubmit} className="needs-validation" noValidate>
                     <div className="mb-3">
                         <label htmlFor="p-code" className="form-label">產品編號</label>
-                        <input id="p-code" className="form-control" type="text" placeholder="請輸入產品編號" onChange={(e)=>{setProductCode(e.target.value)}} required/>
+                        <input id="p-code" className="form-control" type="text" placeholder="請輸入產品編號" onChange={(e)=>{setProductCode(e.target.value)}} required disabled={isLoading}/>
                         <span className="invalid-feedback">請輸入產品編號!</span>
                     </div>
                     <div className="mb-3">
                         <label htmlFor="p-date" className="form-label">生產年月</label>
-                        <input id="p-date" className="form-control" type="month" onChange={(e)=>{setProductionDate(e.target.value)}} required/>
+                        <input id="p-date" className="form-control" type="month" onChange={(e)=>{setProductionDate(e.target.value)}} required disabled={isLoading}/>
                         <span className="invalid-feedback">請輸入生產年月!</span>
                     </div>
                     <div className="mb-3">
                         <label htmlFor="p-randomcode" className="form-label">產品隨機碼</label>
-                        <input id="p-randomcode" className="form-control" type="text" placeholder="請輸入產品隨機碼" onChange={(e)=>{setRandomCode(e.target.value)}} required/>
+                        <input id="p-randomcode" className="form-control" type="text" placeholder="請輸入產品隨機碼" onChange={(e)=>{setRandomCode(e.target.value)}} required disabled={isLoading}/>
                         <span className="invalid-feedback">請輸入產品隨機碼!</span>
                     </div>
                     <div className="mb-3">
                         <div className="form-check">
-                            <input id="readme" className="form-check-input" type="checkbox" required/>
+                            <input id="readme" className="form-check-input" type="checkbox" required disabled={isLoading}/>
                             <label htmlFor="readme" className="form-check-label">我已閱讀以下注意事項</label>
                             <span className="invalid-feedback">你必須要閱讀以下注意事項!</span>
                         </div>
@@ -73,14 +150,26 @@ export default function Home(){
                         </p>
                     </div>
                     <div className="d-grid gap-2 col-8 mx-auto">
-                        <button type="submit" className="btn btn-primary">送出驗證</button>
+                        <button type="submit" className="btn btn-primary" disabled={isLoading}>
+                            {isLoading ? <><span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>Loading...</> : "送出驗證"}
+                        </button>
                         <button type="reset" className="btn btn-outline-secondary" onClick={handleReset}>清除內容</button>
                     </div>
                 </form>
             </div>
+
+            {isLoading && (
+                <div className="position-fixed top-0 start-0 w-100 h-100 bg-dark bg-opacity-50 d-flex justify-content-center align-items-center">
+                    <div className="spinner-border text-light" role="status">
+                        <span className="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+            )}
+
+            {/* 顯示表單確認的Modal */}
             <Modal
-                show={showModal}
-                onClose={()=>{setShowModal(false)}}
+                show={showConfirmModal}
+                onClose={()=>{setShowConfirmModal(false)}}
                 title="確認提交表單?"
                 onConfirm={confirmSubmit}
             >
@@ -88,6 +177,23 @@ export default function Home(){
                 <p><strong>產品編號：</strong>{productCode}</p>
                 <p><strong>生產年月：</strong>{productionDate}</p>
                 <p><strong>產品隨機碼：</strong>{randomcode}</p>
+            </Modal>
+
+            {/* 顯示後端回應的Modal */}
+            <Modal
+                    show={showResponseModal}
+                    onClose={()=>{
+                        var form = document.getElementById('v-form');
+                        form.submit();
+                    }}
+                    title={"驗證結果"}
+                    showCloseBtn={false}
+                    onConfirm={()=>{
+                        var form = document.getElementById('v-form');
+                        form.submit();
+                    }}
+                >
+                {responseData}
             </Modal>
         </>
     )
