@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import Modal from "../components/Modal";
+import "./Home.css";
+
 export default function Home(){
     const [productCode, setProductCode] = useState(''); //產品編號
     const [productionDate, setProductionDate] = useState(''); //生產年月
@@ -159,10 +161,9 @@ export default function Home(){
             </div>
 
             {isLoading && (
-                <div className="position-fixed top-0 start-0 w-100 h-100 bg-dark bg-opacity-50 d-flex justify-content-center align-items-center">
-                    <div className="spinner-border text-light" role="status">
-                        <span className="visually-hidden">Loading...</span>
-                    </div>
+                <div className="position-fixed top-0 start-0 w-100 h-100 bg-dark bg-opacity-50 d-flex justify-content-center align-items-center flex-column">
+                    <div className="spinner-border text-light" role="status"></div>
+                    <span className="text-white">驗證中<span className="dots"></span>請勿離開視窗</span>
                 </div>
             )}
 
