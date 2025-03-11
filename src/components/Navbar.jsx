@@ -20,7 +20,7 @@ export default function Navbar(){
                                 <Link className="nav-link" to="/Contact" title="聯絡我們">聯絡我們</Link>
                             </li>
                             <li className="nav-item">
-                                <a className="nav-link" href="https://www.kenturn.com.tw/tw" target="blank" title="前往官網">前往官網</a>
+                                <Link className="nav-link" to="/AddProduct" title="新增產品">新增產品</Link>
                             </li>
                             <li className="nav-item">
                                 <a className="nav-link" href="https://www.kenturn.com.tw/tw" target="blank" title="前往官網">前往官網</a>

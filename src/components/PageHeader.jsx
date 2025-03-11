@@ -8,7 +8,8 @@ export default function Pageheader(){
     //對應標題
     const pageTitles = {
         "/":"驗證系統",
-        "/Contact":"聯絡我們"
+        "/Contact":"聯絡我們",
+        "/AddProduct":"新增產品"
     }
 
     //取得目前頁面的標題

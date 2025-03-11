@@ -1,8 +1,10 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Modal from "../components/Modal";
 import "./Home.css";
+import apiService from "../apiService";
 
 export default function Home(){
+    const [productType, setProductType] = useState(''); //產品類型
     const [productCode, setProductCode] = useState(''); //產品編號
     const [productionDate, setProductionDate] = useState(''); //生產年月
     const [randomcode, setRandomCode] = useState(''); //產品隨機碼
@@ -12,6 +14,22 @@ export default function Home(){
     const [showConfirmModal, setShowConfirmModal] = useState(false) //控制表單確認modal顯示狀態
     const [showResponseModal, setShowResponseModal] = useState(false); //控制後端回應modal顯示狀態
     const [responseData, setShowResponseData] = useState(''); //後端回應資料(用於顯示在modal)
+
+    //處理透過查詢參數設定值
+    useEffect(() => {
+        //讀取 URL 參數
+        const queryParams = new URLSearchParams(window.location.search);
+        const type = queryParams.get("type"); 
+        const code = queryParams.get("code");
+        const date = queryParams.get("date");
+        const rand = queryParams.get("rand");
+
+        //設定表單值
+        if (type) setProductType(type);
+        if (code) setProductCode(code);
+        if (date) setProductionDate(date);
+        if (rand) setRandomCode(rand);
+    }, []);
 
     //處理重設按鈕(將所有輸入變數設置為空)
     const handleReset = ()=>{
@@ -48,47 +66,35 @@ export default function Home(){
 
         //準備要提交的資料
         const productVerificationData = {
+            productType: productType,
             productCode: productCode,
             productionDate: productionDate,
             randomcode: randomcode
         };
         
-        //
-        //向後端請求驗證(測試用，正式版api應另存檔案統一管理)
-        //
+        //向後端請求驗證
         setTimeout(async () => {
             try {
-                const response = await fetch("https://localhost:7048/api/ProductVerification",{
-                    method: "POST",
-                    headers: {
-                        "Content-Type":"application/json"
-                    },
-                    body: JSON.stringify(productVerificationData)
-                })
-    
-                //檢查回應是否正確
-                if(!response.ok){
-                    alert("請求錯誤!\n請檢查輸入的產品資訊!")
-                    throw new Error("請求錯誤!");
-                }
-    
                 //將回應轉為json
-                const result = await response.json();
+                const result = await apiService.verify(productVerificationData);
     
                 //判斷回應是否為正品
                 if(result.success){
                     //驗證成功(正品)
                     setShowResponseData(
                         <>
-                            <p className="bg-warning bg-opacity-25 p-1 mb-2 fw-bold">此次查詢已扣除1次查詢機會! 剩餘?次查詢機會</p>
-                            <p className="mb-1">您輸入的產品資訊</p>
-                            <p className="mb-1">產品編碼: {productCode}</p>
-                            <p className="mb-1">生產日期: {productionDate}</p>
-                            <p className="mb-1">產品隨機碼: {randomcode}</p>
+                            <p className="bg-warning bg-opacity-25 p-1 mb-2 fw-bold">此次查詢已扣除1次查詢機會! 剩餘{result.v_left}次查詢機會</p>
+                            <p className="mb-1">
+                                您輸入的產品資訊<br/>
+                                產品類型: {productType == "spindle"?"主軸":"刀具"}<br/>
+                                產品編碼: {productCode}<br/>
+                                生產日期: {productionDate}<br/>
+                                產品隨機碼: {randomcode}<br/>
+                            </p>
                             <p className="bg-success bg-opacity-10 p-1 mb-1 text-center">經過查驗後為<strong className="fs-4 text-success">正品</strong>，如有需要任何服務，請<a href="https://www.kenturn.com.tw/tw/contact" target="blank">聯絡我們</a>。</p>
                             <div className="bg-info bg-opacity-25 p-1 mt-1 fs-7">
-                                <p className="m-0 fw-bold">在您查詢前，該產品已被查驗?次</p>
-                                <p className="m-0">上次查驗時間:YYYY/MM/DD HH:MM:SS，地點: OO國家</p>
+                                <p className="m-0 fw-bold">在您查詢前，該產品已被查驗{result.v_c}次</p>
+                                <p className="m-0">上次查驗時間:{result.v_t}，地點: {result.v_ct+", "+result.v_rg+", "+result.v_cty}</p>
                             </div>
                         </>
                     )
@@ -96,16 +102,23 @@ export default function Home(){
                     //驗證失敗(非正品)
                     setShowResponseData(
                         <>
-                            <p className="bg-warning bg-opacity-25 p-1 mb-2 fw-bold">此次查詢已扣除1次查詢機會! 剩餘?次查詢機會</p>
-                            <p className="mb-1">您輸入的產品資訊</p>
-                            <p className="mb-1">產品編碼: {productCode}</p>
-                            <p className="mb-1">生產日期: {productionDate}</p>
-                            <p className="mb-1">產品隨機碼: {randomcode}</p>
-                            <p className="bg-danger bg-opacity-10 p-1 m-0 text-center">經過查驗後為<strong className="fs-4 text-danger">非正品</strong>，如有需要任何服務，請<a href="https://www.kenturn.com.tw/tw/contact" target="blank">聯絡我們</a>。</p>
-                            <div className="bg-info bg-opacity-25 p-1 mt-1 fs-7">
-                                <p className="m-0 fw-bold">在您查詢前，該產品已被查驗?次</p>
-                                <p className="m-0">上次查驗時間:YYYY/MM/DD HH:MM:SS，地點: OO國家</p>
-                            </div>
+                            <p className="mb-1">
+                                您輸入的產品資訊<br/>
+                                產品類型: {productType == "spindle"?"主軸":"刀具"}<br/>
+                                產品編碼: {productCode}<br/>
+                                生產日期: {productionDate}<br/>
+                                產品隨機碼: {randomcode}<br/>
+                            </p>
+                            <p className="bg-danger bg-opacity-10 p-1 m-0 text-center">
+                                {result.v_o ? 
+                                <>
+                                    <strong className="text-danger">超過查詢限制，無法驗證是否為正品</strong>
+                                </>:
+                                <>
+                                    經過查驗後為<strong className="fs-4 text-danger">非正品</strong>
+                                </>}
+                                ，如有需要任何服務，請<a href="https://www.kenturn.com.tw/tw/contact" target="blank">聯絡我們</a>。
+                            </p>
                         </>
                     )
                 }
@@ -127,18 +140,27 @@ export default function Home(){
                 <p className="mb-3 fs-4 fw-bold text-center">請輸入產品資訊</p>
                 <form id="v-form" onSubmit={handleSubmit} className="needs-validation" noValidate>
                     <div className="mb-3">
+                        <label htmlFor="p-type" className="form-label">產品類型</label>
+                        <select id="p-type" className="form-select" value={productType} onChange={(e)=>{setProductType(e.target.value)}} required disabled={isLoading}>
+                            <option value="" defaultValue="">請選擇產品類型</option>
+                            <option value="spindle">主軸</option>
+                            <option value="cuttingTool">刀具</option>
+                        </select>
+                        <span className="invalid-feedback">請選擇產品類型!</span>
+                    </div>
+                    <div className="mb-3">
                         <label htmlFor="p-code" className="form-label">產品編號</label>
-                        <input id="p-code" className="form-control" type="text" placeholder="請輸入產品編號" onChange={(e)=>{setProductCode(e.target.value)}} required disabled={isLoading}/>
+                        <input id="p-code" className="form-control" type="text" placeholder="請輸入產品編號" value={productCode} onChange={(e)=>{setProductCode(e.target.value)}} required disabled={isLoading}/>
                         <span className="invalid-feedback">請輸入產品編號!</span>
                     </div>
                     <div className="mb-3">
                         <label htmlFor="p-date" className="form-label">生產年月</label>
-                        <input id="p-date" className="form-control" type="month" onChange={(e)=>{setProductionDate(e.target.value)}} required disabled={isLoading}/>
+                        <input id="p-date" className="form-control" type="month" value={productionDate} onChange={(e)=>{setProductionDate(e.target.value)}} required disabled={isLoading}/>
                         <span className="invalid-feedback">請輸入生產年月!</span>
                     </div>
                     <div className="mb-3">
                         <label htmlFor="p-randomcode" className="form-label">產品隨機碼</label>
-                        <input id="p-randomcode" className="form-control" type="text" placeholder="請輸入產品隨機碼" onChange={(e)=>{setRandomCode(e.target.value)}} required disabled={isLoading}/>
+                        <input id="p-randomcode" className="form-control" type="text" placeholder="請輸入產品隨機碼" value={randomcode} onChange={(e)=>{setRandomCode(e.target.value)}} required disabled={isLoading}/>
                         <span className="invalid-feedback">請輸入產品隨機碼!</span>
                     </div>
                     <div className="mb-3">
@@ -175,6 +197,7 @@ export default function Home(){
                 onConfirm={confirmSubmit}
             >
                 <p>請確認您的產品資訊：</p>
+                <p><strong>產品類型:</strong>{productType == "spindle"?"主軸":"刀具"}</p>
                 <p><strong>產品編號：</strong>{productCode}</p>
                 <p><strong>生產年月：</strong>{productionDate}</p>
                 <p><strong>產品隨機碼：</strong>{randomcode}</p>
